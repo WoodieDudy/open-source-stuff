@@ -12,8 +12,9 @@ You need 2TB of free space.
 
 ### Download datasets
 Download the raw DNS4 dataset using the provided [script](https://github.com/microsoft/DNS-Challenge/blob/master/download-dns-challenge-4.sh)  
-PTDB dataset from there https://www.spsc.tugraz.at/databases-and-tools/ptdb-tug-pitch-tracking-database-from-graz-university-of-technology.html  
-VCTK/DEMAND already located in DNS4  
+Download PTDB dataset from there https://www.spsc.tugraz.at/databases-and-tools/ptdb-tug-pitch-tracking-database-from-graz-university-of-technology.html  
+VCTK already located in DNS4  
+Download VCTK/DEMAND to exclude it from train sample (because train data includes this test data) https://datashare.ed.ac.uk/handle/10283/1942
 
 ### Install Dependencies
 ```sh
@@ -28,6 +29,11 @@ pip install "deepfilternet[train]"
 ```
 
 Run the script to prepare the dataset:  
+It downloads split files from this [issue](https://github.com/Rikorose/DeepFilterNet/issues/461#issuecomment-1833931530)  
+Adds PTDB samples  
+Exclude VCTK/DEMAND samples  
+Result is new split files in `dns4_splits_audio_paths` folder
+
 ```sh
 python prepare_dataset.py
 ```
