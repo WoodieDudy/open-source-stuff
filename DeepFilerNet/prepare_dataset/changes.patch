@@ -1,0 +1,41 @@
+diff --git a/DeepFilterNet/df/scripts/prepare_data.py b/DeepFilterNet/df/scripts/prepare_data.py
+index a2e77fc..e802dd6 100755
+--- a/DeepFilterNet/df/scripts/prepare_data.py
++++ b/DeepFilterNet/df/scripts/prepare_data.py
+@@ -70,6 +70,9 @@ def write_to_h5(
+             # Computes the samples in several worker processes
+             n_samples = len(dataset)
+             for i, sample in enumerate(loader):
++                if sample['file_name'][0] == "":
++                    continue
++
+                 # Sample is a dict containing a list
+                 fn = os.path.relpath(sample["file_name"][0], data_dict["working_dir"])
+                 audio: np.ndarray = sample["data"][0].numpy()
+@@ -134,10 +137,14 @@ class PreProcessingDataset(Dataset):
+     def __getitem__(self, index):
+         fn = self.file_names[index]
+         logger.debug(f"Reading audio file {fn}")
+-        x = self.read(fn)
+-        assert x.dim() == 2 and x.shape[0] <= 16, f"Got sample {fn} with unexpected shape {x.shape}"
+-        n_samples = x.shape[1]
+-        x = encode(x, self.sr, self.codec, self.compression)
++        try:
++            x = self.read(fn)
++            assert x.dim() == 2 and x.shape[0] <= 16, f"Got sample {fn} with unexpected shape {x.shape}"
++            n_samples = x.shape[1]
++            x = encode(x, self.sr, self.codec, self.compression)
++        except RuntimeError:
++            logger.error(f"Error with {fn}")
++            return {"file_name": "", "data": torch.tensor([0]), "n_samples": 0}
+         return {"file_name": fn, "data": x, "n_samples": n_samples}
+ 
+     def __len__(self):
+@@ -230,6 +237,7 @@ if __name__ == "__main__":
+         with Pool(max(args.num_workers, 1)) as p:
+             res = p.imap(_check_file, f, 100)
+             data[args.type]["files"] = list(res)
++        data[args.type]["files"].sort()
+         logger.info("Checking all audio files complete")
+     write_to_h5(
+         file_name=args.hdf5_db,
